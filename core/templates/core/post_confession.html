@@ -1,0 +1,186 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+<section class="form-section">
+  <!-- Header -->
+  <div class="confession-header animate-fade-in-scale">
+    <div class="confession-icon">💌</div>
+    <h1 class="confession-title">
+      Drop Your <span class="highlight">Confession</span>
+    </h1>
+    <p class="confession-subtitle">
+      Share your thoughts in a safe, judgment-free space. Your story matters, and we're here to listen.
+    </p>
+  </div>
+
+  <!-- Form Container -->
+  <div class="confession-container animate-slide-in-up" style="width: 100%; max-width: 600px; padding: 40px; border-radius: 25px; position: relative;">
+    
+    <form method="post" class="confession-form">
+      {% csrf_token %}
+      
+      <!-- Mood Selector -->
+      <div style="margin-bottom: 30px;">
+        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 15px; font-size: 16px;">
+          How are you feeling? <span style="color: #888; font-weight: normal;">(optional)</span>
+        </label>
+        <div class="mood-selector">
+          <div class="mood-btn" onclick="selectMood(this, '😊')">😊 Happy</div>
+          <div class="mood-btn" onclick="selectMood(this, '😢')">😢 Sad</div>
+          <div class="mood-btn" onclick="selectMood(this, '😰')">😰 Anxious</div>
+          <div class="mood-btn" onclick="selectMood(this, '😤')">😤 Frustrated</div>
+          <div class="mood-btn" onclick="selectMood(this, '🤔')">🤔 Confused</div>
+          <div class="mood-btn" onclick="selectMood(this, '❤️')">❤️ Loved</div>
+        </div>
+        <input type="hidden" name="mood" id="selectedMood" value="">
+      </div>
+      
+      <div style="position: relative; margin-bottom: 25px;">
+        <label style="display: block; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 16px;">
+          Your Confession
+        </label>
+        <textarea
+          name="content"
+          rows="8"
+          placeholder="Let it all out... We don't judge. Share your story, your feelings, your truth. This is your safe space."
+          required
+          style="
+            width: 100%; 
+            padding: 20px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 15px; 
+            resize: none; 
+            outline: none; 
+            font-size: 16px; 
+            line-height: 1.6;
+            font-family: inherit;
+          "
+          oninput="updateCharCount(this)"
+        ></textarea>
+        <div class="char-counter">
+          <span id="charCount">0</span> characters
+        </div>
+        
+        <!-- Security indicator -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; color: #666;">
+          <span style="color: #10b981;">🔒</span>
+          <span>Your confession is completely anonymous and secure</span>
+        </div>
+      </div>
+      
+      <button 
+        type="submit" 
+        style="
+          width: 100%; 
+          padding: 18px 24px; 
+          border: none; 
+          border-radius: 15px; 
+          color: white; 
+          font-size: 18px; 
+          font-weight: bold; 
+          cursor: pointer;
+          margin-bottom: 20px;
+          background: linear-gradient(135deg, #8E3748 0%, #A44858 100%);
+        "
+      >
+        <span style="position: relative; z-index: 1;">Submit Anonymously</span>
+      </button>
+      
+      <p style="text-align: center; font-size: 12px; color: #888; margin-bottom: 0;">
+        By submitting, you agree that your confession will be posted anonymously
+      </p>
+    </form>
+  </div>
+  
+  <!-- Back Link -->
+  <div style="margin-top: 30px;" class="animate-fade-in-scale">
+    <a href="{% url 'home' %}" class="back-link">
+      Back to murmur's
+    </a>
+  </div>
+</section>
+
+<style>
+.mood-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mood-btn {
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+}
+
+.mood-btn:hover {
+  border-color: #8E3748;
+  background: #f8f9fa;
+}
+
+.mood-btn.active {
+  background: linear-gradient(135deg, #8E3748 0%, #A44858 100%);
+  color: white;
+  border-color: #8E3748;
+}
+
+.char-counter {
+  position: absolute;
+  right: 10px;
+  bottom: -25px;
+  font-size: 12px;
+  color: #888;
+}
+</style>
+
+<script>
+  // Mood selector functionality
+  function selectMood(element, moodValue) {
+    // Remove active class from all mood buttons
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // Add active class to selected button
+    element.classList.add('active');
+    
+    // Set the hidden input value
+    document.getElementById('selectedMood').value = moodValue;
+  }
+  
+  // Enhanced textarea focus effects
+  document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.querySelector('textarea[name="content"]');
+    
+    textarea.addEventListener('focus', function() {
+      this.style.background = 'linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%)';
+    });
+    
+    textarea.addEventListener('blur', function() {
+      this.style.background = 'linear-gradient(145deg, #ffffff 0%, #fafbfc 100%)';
+    });
+    
+    // Add typing sound effect 
+    textarea.addEventListener('input', function() {
+      this.style.borderColor = '#A44858';
+      setTimeout(() => {
+        this.style.borderColor = '#8E3748';
+      }, 150);
+    });
+  });
+  
+  // Add some interactive particles on form submission
+  document.querySelector('.confession-form').addEventListener('submit', function(e) {
+    const button = this.querySelector('button[type="submit"]');
+    button.innerHTML = '<span style="position: relative; z-index: 1;">✨ Submitting... ✨</span>';
+    button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+  });
+</script>
+
+{% endblock %}

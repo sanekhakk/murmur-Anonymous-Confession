@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<section class="confession-feed animate-slide-in-up">
+  <h2 class="font-semibold">Recent Murmr's 🕊️</h2>
+  {% if confessions %}
+  <div class="confession-list">
+    {% for confession in confessions %}
+    <div class="confession-card ">
+      <!-- Mood Display -->
+      {% if confession.mood %}
+      <div class="confession-mood">
+        <span class="mood-badge">{{ confession.mood }} Feeling {{ confession.get_mood_display }}</span>
+      </div>
+      {% endif %}
+      
+      <p class="confession-text">"{{ confession.message }}"</p>
+      <div class="confession-meta">
+        <small>Upvotes: {{ confession.upvotes }}</small><br />
+        <small>Posted on {{ confession.created_at|date:"F j, Y, g:i a" }}</small>
+      </div>
+
+      <div class="confession-actions">
+        <form
+          action="{% url 'upvote_confession' confession.id %}"
+          method="post"
+          style="display: inline"
+        >
+          {% csrf_token %}
+          <button
+            class="upvote-btn"
+            onclick="upvoteConfession('{{ confession.id }}'); return false"
+          >
+            👍
+            <span id="upvote-count-{{ confession.id }}">{{ confession.upvotes }}</span>
+          </button>
+        </form>
+        <button
+          class="toggle-replies-btn"
+          onclick="toggleReplies('{{ confession.id }}')"
+        >
+          💬 View Replies
+        </button>
+      </div>
+
+      <div id="replies-{{ confession.id }}" class="replies hidden">
+        {% if confession.replies.all %}
+        {% for reply in confession.replies.all %}
+        <div class="reply-box">🗨️ {{ reply.text }}</div>
+        {% endfor %}
+        {% else %}
+        <p class="no-replies-text">No replies yet.</p>
+        {% endif %}
+
+        <form
+          method="post"
+          action="{% url 'add_reply' confession.id %}"
+          class="reply-form"
+        >
+          {% csrf_token %}
+          <input
+            type="text"
+            name="reply_text"
+            placeholder="Type your reply..."
+            required
+          />
+          <button type="submit">Reply</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No confessions yet. Be the first to whisper something...</p>
+  </div>
+  {% endif %}
+</section>
+
+<style>
+.confession-mood {
+  margin-bottom: 15px;
+}
+
+.mood-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #8E3748 0%, #A44858 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(142, 55, 72, 0.3);
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function upvoteConfession(confessionId) {
+    event.preventDefault();
+
+    fetch(`/upvote/${confessionId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        document.getElementById(`upvote-count-${confessionId}`).innerText =
+          data.upvotes;
+      })
+      .catch((error) => console.error("Upvote failed:", error));
+  }
+
+  function toggleReplies(id) {
+    const box = document.getElementById("replies-" + id);
+    box.classList.toggle("hidden");
+  }
+</script>
+{% endblock %}
